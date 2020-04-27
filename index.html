@@ -64,9 +64,9 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-new的模拟与实现" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-JS中new的实现" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2020/04/27/new%E7%9A%84%E6%A8%A1%E6%8B%9F%E4%B8%8E%E5%AE%9E%E7%8E%B0/" class="article-date">
+    <a href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="article-date">
   <time datetime="2020-04-27T05:10:32.716Z" itemprop="datePublished">2020-04-27</time>
 </a>
     
@@ -78,7 +78,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2020/04/27/new%E7%9A%84%E6%A8%A1%E6%8B%9F%E4%B8%8E%E5%AE%9E%E7%8E%B0/">new的模拟与实现</a>
+      <a class="article-title" href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/">JS中new的实现</a>
     </h1>
   
 
@@ -86,8 +86,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="JavaScript中new的模拟实现以及不为人知的部分"><a href="#JavaScript中new的模拟实现以及不为人知的部分" class="headerlink" title="JavaScript中new的模拟实现以及不为人知的部分"></a><center>JavaScript中new的模拟实现以及不为人知的部分<center></h1><p><strong>new</strong>实现之前需要先了解它是干啥的</p>
-<h3 id="new的作用"><a href="#new的作用" class="headerlink" title="new的作用"></a>new的作用</h3><p>规范的说：new关键字可以用来创建具有构造函数的<strong>系统内置对象</strong>的实例和<strong>用户自定义类型</strong>对象的实例，通俗的说就是可以通过函数来创建一个实例对象。</p>
+        <h1 id="JS中new的实现以及它背后的故事"><a href="#JS中new的实现以及它背后的故事" class="headerlink" title="JS中new的实现以及它背后的故事"></a><center>JS中new的实现以及它背后的故事<center></h1><h3 id="new的作用"><a href="#new的作用" class="headerlink" title="new的作用"></a>new的作用</h3><p>规范的说：new关键字可以用来创建具有构造函数的<strong>系统内置对象</strong>的实例和<strong>用户自定义类型</strong>对象的实例，通俗的说就是可以通过函数来创建一个实例对象。</p>
 <p>new操作符包含了四个操作（MDN的原文解释）：</p>
 <ol>
 <li>创建一个空的简单JavaScript对象（即{}）；</li>
@@ -100,8 +99,6 @@
 
 <p>用代码来解释之前的话就是：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个空对象</span></span><br><span class="line"><span class="keyword">let</span> obj = &#123;&#125;;</span><br><span class="line"><span class="comment">// 将构造函数的原型添加到这个空对象的原型链上</span></span><br><span class="line">obj.__proto__ = Person.prototype;</span><br><span class="line"><span class="comment">// 借用构造函数并传入参数，就是用obj给this赋值</span></span><br><span class="line"><span class="keyword">let</span> result = Person.call(obj, <span class="built_in">arguments</span>);</span><br><span class="line"><span class="comment">// 如果之前借用构造函数来初始化的result</span></span><br><span class="line"><span class="keyword">return</span> <span class="keyword">typeof</span> result === <span class="string">"obj"</span> ? result : obj;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p><code>obj.__proto__ = Person.prototype</code> 是为了继承Person中原型链上的属性，<code>Person.call(obj, arguments)</code> 借用构造函数，这两个组合拳使得new关键字的作用和组合继承很想，更准确地说是<strong>寄生组合式</strong>模式。忍不住回顾一下继承的特点（ES5）：</p>
 <p><strong>原型链继承</strong>：</p>
@@ -155,7 +152,7 @@
 <p>上段代码很明显，构造函数里就算构造了一个宇宙没啥作用，因为你传不出来，最终的结果就是你构造函数中最后return的对象。</p>
 <p>第三种情况：</p>
 <p>构造函数返回的是基本类型值</p>
-<p><img src="C:%5CUsers%5CYaoyuan%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200427121740099.png" alt="image-20200427121740099"></p>
+<p><img src="C:%5CUsers%5CYaoyuan%5CDesktop%5C%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20200427131649.png" alt="微信图片_20200427131649"></p>
 <p>大家不要被“英俊的耀元”迷惑了双眼，重点应该放在那段我看不懂的英文上：</p>
 <blockquote>
 <p>Primitive value returned from constructor will be lost when called with ‘new’</p>
@@ -175,7 +172,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2020/04/27/new%E7%9A%84%E6%A8%A1%E6%8B%9F%E4%B8%8E%E5%AE%9E%E7%8E%B0/" data-id="ck9i0xzh8000068v5cfcq10io" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/" data-id="ck9i3j0yy000070v57h9whcdu" class="article-share-link">Share</a>
       
       
     </footer>
@@ -307,7 +304,7 @@
       <ul>
         
           <li>
-            <a href="/2020/04/27/new%E7%9A%84%E6%A8%A1%E6%8B%9F%E4%B8%8E%E5%AE%9E%E7%8E%B0/">new的模拟与实现</a>
+            <a href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/">JS中new的实现</a>
           </li>
         
           <li>
