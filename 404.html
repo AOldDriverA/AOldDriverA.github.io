@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
-  <title>Hexo</title>
+  <title>页面走丢啦~ - Hexo</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -143,57 +143,16 @@
 
   <main>
     
-      <div class="container nopadding-md">
-        <div class="py-5" id="board"
-          style=margin-top:0>
-          
-          <div class="container">
-            <div class="row">
-              <div class="col-12 col-md-10 m-auto">
-                
+      
 
+<script>
+  function redirect() {
+    location.href = "/";
+  }
 
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a class="index-header" href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/">JS中new的实现</a>
+  //setTimeout(redirect, 3000)
+</script>
 
-      <a href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="index-excerpt">
-        
-        
-          
-        
-        <div>JS中new的实现以及它背后的故事new的作用规范的说：new关键字可以用来创建具有构造函数的系统内置对象的实例和用户自定义类型对象的实例，通俗的说就是可以通过函数来创建一个实例对象。
-new操作符包含了四个操作（MDN的原文解释）：
-
-创建一个空的简单JavaScript对象（即{}）；
-链接该对象（即设置该对象的构造函数）到另一个对象；
-将步骤1新创建的对象作为this的上下文；
-如果该函数没</div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>&nbsp;2020-04-27
-          </div>
-        
-        
-        
-      </div>
-    </div>
-  </div>
-
-
-
-
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     
   </main>
 
@@ -276,7 +235,7 @@ new操作符包含了四个操作（MDN的原文解释）：
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "&nbsp;",
+        "Page not found&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
