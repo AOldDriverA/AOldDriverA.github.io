@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
-  <title>Hexo</title>
+  <title>归档 - Hexo</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -46,7 +46,7 @@
 
 
 <body>
-  <header style="height: 100vh;">
+  <header style="height: 80vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -119,7 +119,7 @@
 </nav>
 
     <div class="view intro-2" id="background" parallax=true
-         style="background: url('/img/bg/01.jpg') no-repeat center center;
+         style="background: url('/img/default.png') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
@@ -132,10 +132,6 @@
           </div>
 
           
-            <div class="scroll-down-bar">
-              <i class="iconfont icon-arrowdown"></i>
-            </div>
-          
         </div>
       </div>
     </div>
@@ -145,76 +141,27 @@
     
       <div class="container nopadding-md">
         <div class="py-5" id="board"
-          style=margin-top:0>
+          >
           
           <div class="container">
             <div class="row">
               <div class="col-12 col-md-10 m-auto">
                 
 
-
-  <div class="row mx-auto index-card">
+<div class="list-group">
+  <p class="h4">共计 2 篇文章</p>
+  <hr>
+  
     
+      
+      <p class="h5">2020</p>
     
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a class="index-header" href="/2020/05/01/Cesium%E4%B8%AD%E7%9A%84Clock/">Cesium中的Clock</a>
-
-      <a href="/2020/05/01/Cesium%E4%B8%AD%E7%9A%84Clock/" class="index-excerpt">
-        
-        
-          
-        
-        <div>Cesium中的Clock类Cesium中的clock主要是为了追踪动画，接收如下参数：
-@param &#123;JulianDate&#125; [options.startTime] （动画）开始时间
-@param &#123;JulianDate&#125; [options.stopTime] 结束时间
-@param &#123;JulianDate&#125; [options.cur</div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>&nbsp;2020-05-01
-          </div>
-        
-        
-        
-      </div>
-    </div>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a class="index-header" href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/">JS中new的实现</a>
-
-      <a href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="index-excerpt">
-        
-        
-          
-        
-        <div>JS中new的实现以及它背后的故事new的作用规范的说：new关键字可以用来创建具有构造函数的系统内置对象的实例和用户自定义类型对象的实例，通俗的说就是可以通过函数来创建一个实例对象。
-new操作符包含了四个操作（MDN的原文解释）：
-
-创建一个空的简单JavaScript对象（即{}）；
-链接该对象（即设置该对象的构造函数）到另一个对象；
-将步骤1新创建的对象作为this的上下文；
-如果该函数没</div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>&nbsp;2020-04-27
-          </div>
-        
-        
-        
-      </div>
-    </div>
-  </div>
-
-
+    <a href="/2020/05/01/Cesium%E4%B8%AD%E7%9A%84Clock/" class="list-group-item list-group-item-action">
+      <span class="archive-post-title">Cesium中的Clock</span>
+      <span style="float: right;">05-01</span>
+    </a>
+  
+</div>
 
 
 
@@ -305,7 +252,7 @@ new操作符包含了四个操作（MDN的原文解释）：
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "&nbsp;",
+        "归档&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

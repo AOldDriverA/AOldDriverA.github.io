@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  <title>Cesium中的Clock - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/9.18.1/styles/github-gist.min.css" />
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_fmb4a04yx8h.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_ijqayz9ro8k.css">
+
+
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>你说可乐不可乐鸭</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">
+              <i class="iconfont icon-home-fill"></i>
+              首页</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">
+              <i class="iconfont icon-archive-fill"></i>
+              归档</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">
+              <i class="iconfont icon-category-fill"></i>
+              分类</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">
+              <i class="iconfont icon-tags-fill"></i>
+              标签</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">
+              <i class="iconfont icon-user-fill"></i>
+              关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/bg/01.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <div class="mt-3 post-meta">
+                  <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+                  <time datetime="2020-05-01 10:04">
+                    星期五, 五月 1日 2020, 10:04 上午
+                  </time>
+                </div>
+              
+
+              <div class="mt-1">
+                
+                  
+                  <span class="post-meta mr-2">
+                    <i class="iconfont icon-chart"></i>
+                    1.9k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta mr-2">
+                      <i class="iconfont icon-clock-fill"></i>
+                    
+                    
+                    23
+                     分钟
+                  </span>
+                
+
+                
+              </div>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h1 id="Cesium中的Clock类"><a href="#Cesium中的Clock类" class="headerlink" title="Cesium中的Clock类"></a><center>Cesium中的Clock类<center></h1><p>Cesium中的clock主要是为了追踪动画，接收如下参数：</p>
+<pre><code class="hljs javascript">@param &#123;JulianDate&#125; [options.startTime] （动画）开始时间
+@param &#123;JulianDate&#125; [options.stopTime] 结束时间
+@param &#123;JulianDate&#125; [options.currentTime] 当前时间 
+@param &#123;<span class="hljs-built_in">Number</span>&#125; [options.multiplier=<span class="hljs-number">1.0</span>] 快进倍数
+@param &#123;ClockStep&#125; [options.clockStep=ClockStep.SYSTEM_CLOCK_MULTIPLIER] 决定clock的调用是依赖帧还是系统时钟
+@param &#123;ClockRange&#125; [options.clockRange=ClockRange.UNBOUNDED] 当到达开始时间或结束时间时应该如何工作（比如LOOP_STOP,循环播放）
+@param &#123;<span class="hljs-built_in">Boolean</span>&#125; [options.canAnimate=<span class="hljs-literal">true</span>] 是否有动画
+@param &#123;<span class="hljs-built_in">Boolean</span>&#125; [options.shouldAnimate=<span class="hljs-literal">false</span>] 是否可以开始动画canAnimate和ShouldAnimate同时成立才能有动画</code></pre>
+
+<p>如果没定义当前时间：如果startTime存在则与其相同，如果stopTime存在则为其前一天，如果两者也都不存在，则以该函数运行时的系统时间作为当前时间：</p>
+<pre><code class="hljs javascript"><span class="hljs-keyword">if</span> (!defined(currentTime)) &#123;
+	<span class="hljs-comment">// if not specified, current time is the start time,</span>
+	<span class="hljs-comment">// or if that is not specified, 1 day before the stop time,</span>
+	<span class="hljs-comment">// or if that is not specified, then now.</span>
+	<span class="hljs-keyword">if</span> (defined(startTime)) &#123;
+		currentTime = JulianDate.clone(startTime);
+	&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (defined(stopTime)) &#123;
+		currentTime = JulianDate.addDays(stopTime, <span class="hljs-number">-1.0</span>, <span class="hljs-keyword">new</span> JulianDate());
+	&#125; <span class="hljs-keyword">else</span> &#123;
+		currentTime = JulianDate.now();
+	&#125;
+&#125; <span class="hljs-keyword">else</span> &#123;
+	currentTime = JulianDate.clone(currentTime);
+&#125;</code></pre>
+
+<p>JulianDate为儒略日，Cesium提供了JulianDate与UTC（协调世界时）的转换。JulianDate的创建用到了julianDayNumber（儒略日总天数），secondsOfDay（该天中的总秒数），timeStandard（时间标准，默认为UTC）</p>
+<p>如果没有定义startTime，则以currentTime作为其值。如果没有定义stopTime，则以startTime+1天作为stopTime。</p>
+<p>说一下它的几个参数</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">// 时间按照指定间隔跳跃 间隔为multiplier</span>
+ClockStep.TICK_DEPENDENT: <span class="hljs-number">0</span>,	
+<span class="hljs-comment">// 上次调用至今的系统时间间隔 * multiplier</span>
+<span class="hljs-comment">// 通俗的说就是此次间隔时间按照上一次调用时的间隔时间</span>
+<span class="hljs-comment">// 可以理解为根据帧，但不死板，会根据机器刷新率以及场景</span>
+<span class="hljs-comment">// 动态决定每秒帧数</span>
+ClockStep.SYSTEM_CLOCK_MULTIPLIER: <span class="hljs-number">1</span>, 
+<span class="hljs-comment">// 将时钟设置为当前系统时间，忽略所有其他设置。</span>
+ClockStep.SYSTEM_CLOCK : <span class="hljs-number">2</span></code></pre>
+
+<pre><code class="hljs javascript"><span class="hljs-comment">// 无穷执行，会朝着这个方向一直运行下去，直到海枯石烂</span>
+ClockRange.UNBOUNDED: <span class="hljs-number">0</span>,
+<span class="hljs-comment">// 正常执行，会始于startTime止于stopTime（该开始开始，该结束结束）</span>
+ClockRange.CLAMPED: <span class="hljs-number">1</span>,
+<span class="hljs-comment">// 循环执行，到结尾了会跳转到开头重新执行</span>
+ClockRange.LOOP_STOP: <span class="hljs-number">2</span>,</code></pre>
+
+
+
+<p>clock中最为重要的一个函数就是tick了：</p>
+<pre><code class="hljs javascript">Clock.prototype.tick = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>&#123;
+  <span class="hljs-comment">// 获取当前时间戳 （getTimestamp有点意思，它返回毫秒，如果你指定了某种时间系统</span>
+  <span class="hljs-comment">//（performance），它会调用该系统来获取时间，当然你需要去修改该函数的源码。默认</span>
+  <span class="hljs-comment">// 情况下时间系统未定义，获取的时Date.now()；</span>
+	<span class="hljs-keyword">var</span> currentSystemTime = getTimestamp();
+  <span class="hljs-comment">// 获取"当前"时间（注意，此处this._currentTime表示上一次Clock.tick运行时的值，</span>
+  <span class="hljs-comment">// 所以准确的说应该叫passTime）</span>
+  <span class="hljs-keyword">var</span> currentTime = JulianDate.clone(<span class="hljs-keyword">this</span>._currentTime);
+
+  <span class="hljs-comment">// 如果动画存在并且应该被播放（也就是说动画被触发了）</span>
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.canAnimate &amp;&amp; <span class="hljs-keyword">this</span>._shouldAnimate) &#123;
+    <span class="hljs-keyword">var</span> clockStep = <span class="hljs-keyword">this</span>._clockStep;
+    <span class="hljs-comment">// 如果依照当前系统时间</span>
+    <span class="hljs-keyword">if</span> (clockStep === ClockStep.SYSTEM_CLOCK) &#123;
+      <span class="hljs-comment">// 获取当前系统时间（JulianDate.now返回的是Date）</span>
+      currentTime = JulianDate.now(currentTime);
+    &#125; <span class="hljs-keyword">else</span> &#123;
+      <span class="hljs-comment">// 否则就先设置乘数</span>
+    	<span class="hljs-keyword">var</span> multiplier = <span class="hljs-keyword">this</span>._multiplier;
+			<span class="hljs-comment">// 以multiplier为间隔</span>
+    	<span class="hljs-keyword">if</span> (clockStep === ClockStep.TICK_DEPENDENT) &#123;
+        <span class="hljs-comment">// 将currentTime加上multiplier并返回结果</span>
+      	currentTime = JulianDate.addSeconds(currentTime, multiplier, currentTime);
+    	&#125; <span class="hljs-keyword">else</span> &#123;
+        <span class="hljs-comment">// 根据当前帧的系统时间-上一帧的系统时间得出两帧时间差（毫秒）</span>
+      	<span class="hljs-keyword">var</span> milliseconds = currentSystemTime - <span class="hljs-keyword">this</span>._lastSystemTime;
+        <span class="hljs-comment">// 当前的时间就是currentTime + 上一步求出的时间差，因为时毫秒所以/1000.0</span>
+    		currentTime = JulianDate.addSeconds(currentTime, multiplier * (milliseconds / <span class="hljs-number">1000.0</span>), currentTime);
+    	&#125;
+
+    	<span class="hljs-keyword">var</span> clockRange = <span class="hljs-keyword">this</span>.clockRange;
+    	<span class="hljs-keyword">var</span> startTime = <span class="hljs-keyword">this</span>.startTime;
+    	<span class="hljs-keyword">var</span> stopTime = <span class="hljs-keyword">this</span>.stopTime;
+
+      <span class="hljs-comment">// 如果时一直正常执行模式</span>
+    	<span class="hljs-keyword">if</span> (clockRange === ClockRange.CLAMPED) &#123;
+        <span class="hljs-comment">// 当前时间小于开始时间</span>
+    		<span class="hljs-keyword">if</span> (JulianDate.lessThan(currentTime, startTime)) &#123;
+          <span class="hljs-comment">// 将开始时间赋值给当前时间（然后搓搓手耐心的等待开始吧）</span>
+      		currentTime = JulianDate.clone(startTime, currentTime);
+        <span class="hljs-comment">// 当前时间大于结束时间</span>
+    		&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (JulianDate.greaterThan(currentTime, stopTime)) &#123;
+          <span class="hljs-comment">// 不行了，超时了，得抓紧结束，先把结束时间赋值给当前时间</span>
+      		currentTime = JulianDate.clone(stopTime, currentTime);
+          <span class="hljs-comment">// 提交结束事件</span>
+    			<span class="hljs-keyword">this</span>.onStop.raiseEvent(<span class="hljs-keyword">this</span>);
+    		&#125;
+      <span class="hljs-comment">// 如果是循环模式  </span>
+    	&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (clockRange === ClockRange.LOOP_STOP) &#123;
+        <span class="hljs-comment">// 当前时间小于开始时间，则和上一步一样，将当前时间更新为开始时间</span>
+      	<span class="hljs-keyword">if</span> (JulianDate.lessThan(currentTime, startTime)) &#123;
+    			currentTime = JulianDate.clone(startTime, currentTime);
+      	&#125;
+        <span class="hljs-comment">// 当前时间大于结束时间</span>
+    		<span class="hljs-keyword">while</span> (JulianDate.greaterThan(currentTime, stopTime)) &#123;
+        <span class="hljs-comment">// 将大于的部分加上startTime返回给当前时间（嗯，一想确实比较合理）  </span>
+      	currentTime = JulianDate.addSeconds(startTime, JulianDate.secondsDifference(currentTime, stopTime), currentTime);
+        <span class="hljs-comment">// 提交结束时间</span>
+      	<span class="hljs-keyword">this</span>.onStop.raiseEvent(<span class="hljs-keyword">this</span>);
+    		&#125;
+ 			&#125;
+		&#125;
+	&#125;
+
+  <span class="hljs-comment">// 更新当前时间 </span>
+  <span class="hljs-keyword">this</span>._currentTime = currentTime;
+  <span class="hljs-comment">// 更新当前时间（这一帧对应的系统时间）</span>
+  <span class="hljs-keyword">this</span>._lastSystemTime = currentSystemTime;
+  <span class="hljs-comment">// 触发回调函数</span>
+  <span class="hljs-keyword">this</span>.onTick.raiseEvent(<span class="hljs-keyword">this</span>);
+  <span class="hljs-keyword">return</span> currentTime;
+&#125;;</code></pre>
+
+<p>总结来说，其实就是更新currentTime。如果你按照系统时间来更新，那好办，我直接获取系统的<strong>当前时间</strong>，然后return，就省略了80%的代码。如果我按照某个固定时间或者依据帧数时间，就得考虑很多情况，如果当前时间在合理时间区间内，则依据multiplier和对应的计算规则得到当前时间，如果时间超限（小于起始时间或大于终止时间）那么又会根据你动画展示模式分为正常执行和循环执行两种不同处理方式，最终计算得到合理的<strong>当前时间</strong>。</p>
+<p>这里扯一下固定时间和帧数时间，其实就是固定增量时间fixedUpdate和可变增量时间update，固定增量时间就是每两帧运行的时间间隔固定，优点是不用动脑子而且可以当做一个已知量来和物理逻辑或计算进行绑定，缺点是固定就会不灵活。比如给一个动画设置60帧每秒，也就是一帧16.7豪秒左右，也就是说每隔16.7毫秒就会进行一次帧操作，当动画简单时问题不大（当然，本来GPU能进行每秒144帧丝滑刷新的，结果仍然60帧，虽然很不爽但能接受），但复杂时，每帧的执行时间很可能超过16.7毫秒，上一帧还没得出结果还没来得及进行展示，下一帧就不期而遇，慌慌张张的挤了过来，中间可能丢了一些帧，会造成抖动效果（不知道我的理解对不对，欢迎讨论）。</p>
+<p>帧数和刷新率的关系也能扯一些，这里的帧数是指每秒渲染好的画面次数，刷新率是指屏幕显示的刷新率，屏幕每次刷新都要去颜色缓冲区中将渲染好的画面取出来，如果你GPU很强，每秒渲染120帧，可我显示器每秒只能显示60帧，那很抱歉，你每两次中有一次是浪费的，而且帧数太多也不好，我从缓冲区中取画面，取到一半你就又画好了一张，然后我熟若无睹的接着取，这样会造成上半部分是旧帧下半部分是新帧，上下部分内容很可能不匹配（如果某大佬的180°回身甩狙），造成了画面的撕裂。这样催生出了一个产业：显示器将自动和帧率匹配，如英伟达的Gsync技术（是的，按摩店也有freesync，但总是日常180°翻身，但我还是要歇斯底里的吼一句：AMD YES！！）。鄙人前年买笔记本的时候这还是个卖点（1070推144刷新率，也就csgo能达到，守望勉强，最爱玩的战地1、5顶配下也分别只有100-70帧，不过寒霜航空引擎真的牛皮）</p>
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/04/27/JS%E4%B8%ADnew%E7%9A%84%E5%AE%9E%E7%8E%B0/">
+                        <span class="hidden-mobile">JS中new的实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Cesium中的Clock&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
