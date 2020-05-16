@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  <title>图形学中的点乘叉乘线性和非线性计算 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/9.18.1/styles/github-gist.min.css" />
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_fmb4a04yx8h.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_ijqayz9ro8k.css">
+
+
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.0"><!-- hexo-inject:begin --><!-- hexo-inject:end --></head>
+
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>你说可乐不可乐鸭</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">
+              <i class="iconfont icon-home-fill"></i>
+              首页</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">
+              <i class="iconfont icon-archive-fill"></i>
+              归档</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">
+              <i class="iconfont icon-category-fill"></i>
+              分类</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">
+              <i class="iconfont icon-tags-fill"></i>
+              标签</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">
+              <i class="iconfont icon-user-fill"></i>
+              关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/661317c34955.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <div class="mt-3 post-meta">
+                  <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+                  <time datetime="2020-05-02 12:17">
+                    星期六, 五月 2日 2020, 12:17 中午
+                  </time>
+                </div>
+              
+
+              <div class="mt-1">
+                
+                  
+                  <span class="post-meta mr-2">
+                    <i class="iconfont icon-chart"></i>
+                    1.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta mr-2">
+                      <i class="iconfont icon-clock-fill"></i>
+                    
+                    
+                    19
+                     分钟
+                  </span>
+                
+
+                
+              </div>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h1 id="图形学中的点乘叉乘线性和非线性计算"><a href="#图形学中的点乘叉乘线性和非线性计算" class="headerlink" title="图形学中的点乘叉乘线性和非线性计算"></a><center>图形学中的点乘叉乘线性和非线性计算<center></h1><h3 id="回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象"><a href="#回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象" class="headerlink" title="回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象"></a>回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象</h3><h3 id="线性变换："><a href="#线性变换：" class="headerlink" title="线性变换："></a><strong>线性变换</strong>：</h3><p>线性变换是将向量作为输入和输出的一类函数，线性变换就是基向量的变换过程，线性变换矩阵就是变换后基向量的坐标（基向量默认为单位向量）。如果变换矩阵作为行列式其结果表示基向量变换后所构成平行四边形面积或平行六面体体积（如果变换前基向量不为单位向量，则此处为变化率）</p>
+<script type="math/tex; mode=display">
+\left[\matrix{a&b\\c&d\\}\right]\left[\matrix{x\\y\\}\right]=x\left[\matrix{a\\c\\}\right]+y\left[\matrix{b\\d\\}\right]</script><p>基向量<strong>i</strong>变换后的坐标为（a，c），基向量<strong>j</strong>变换后的坐标为（b，d）</p>
+<p><strong>特点</strong>：保持格网平行且等距的变换，同时保持原点不变。</p>
+<h3 id="Dot（点积或点乘）"><a href="#Dot（点积或点乘）" class="headerlink" title="Dot（点积或点乘）"></a>Dot（点积或点乘）</h3><p><strong>结果</strong>：为一个<strong>值</strong>，表示<strong>b</strong>在<strong>a</strong>上的投影与<strong>a</strong>模的乘积（其实是一个长度，即<strong>b</strong>投影的长度<strong>*a</strong>的长度），当<strong>a</strong>、<strong>b</strong>为单位向量时，值为其夹角的余弦值。</p>
+<p><strong>理解</strong>：点积是一个降维的过程，从上面的结果就可看出，因为投影本身就是降维。 $\vec{a}\cdot\vec{b}$就是将第一个向量<strong>a</strong>转化为（推倒）线性变换矩阵，第二个向量<strong>b</strong>可以看成待变换点。</p>
+<p>计算公式：</p>
+<script type="math/tex; mode=display">
+\vec{a}\cdot\vec{b} = ||a||*||b||*cos\theta</script><p>点成满足交换律</p>
+<script type="math/tex; mode=display">
+\vec{a}\cdot\vec{b} = \vec{b}\cdot\vec{a}</script><p>分配律</p>
+<script type="math/tex; mode=display">
+\vec{a}\cdot(\vec{b} + \vec{c}) = \vec{a}\cdot\vec{b} + \vec{a}\cdot\vec{c}</script><p>结合律</p>
+<script type="math/tex; mode=display">
+(k*\vec{a})\cdot\vec{b} = \vec{a}\cdot(k*\vec{b}) = k*(\vec{a}\cdot\vec{b})</script><p>二维点积</p>
+<script type="math/tex; mode=display">
+\vec{a}\cdot\vec{b} = \begin{pmatrix}
+x_a\\
+y_b\\
+\end{pmatrix} * \begin{pmatrix}
+x_b\\
+y_a\\
+\end{pmatrix} = x_ax_b + y_ay_b</script><p>三维点积</p>
+<script type="math/tex; mode=display">
+\vec{a}\cdot\vec{b} = \begin{pmatrix}
+x_a\\
+y_a\\
+z_a\\
+\end{pmatrix} * \begin{pmatrix}
+x_b\\
+y_b\\
+z_b\\
+\end{pmatrix} = x_ax_b + y_ay_b + z_az_b</script><p>点乘作用：</p>
+<ol>
+<li>可以当做<strong>b</strong>在<strong>a</strong>上的投影，根据投影后的结果<strong>b1</strong>对<strong>b</strong>进行分解</li>
+<li>可以判断<strong>a</strong>和<strong>b</strong>的方向</li>
+</ol>
+<h3 id="Cross"><a href="#Cross" class="headerlink" title="Cross"></a>Cross</h3><p><strong>结果</strong>：为一个向量，该向量垂直于<strong>a</strong>、<strong>b</strong>，向量的模（长度大小）为两向量组成平行四边行的面积</p>
+<script type="math/tex; mode=display">
+||a\times b|| = ||a||*||b||*sin\varphi</script><p>不满足交换律</p>
+<script type="math/tex; mode=display">
+\vec{a}\times\vec{b} = -\vec{b}\times\vec{a}</script><p>分配律</p>
+<script type="math/tex; mode=display">
+\vec{a}\times(\vec{b} + \vec{c}) = \vec{a}\times\vec{b} + \vec{a}\times\vec{c}</script><p>结合律</p>
+<script type="math/tex; mode=display">
+\vec{a}\times(k*\vec{b}) = k*(\vec{a}\times\vec{b})</script><p>三维叉乘</p>
+<script type="math/tex; mode=display">
+\vec{a}\times\vec{b} = \begin{pmatrix}
+y_az_b - y_bz_a\\
+z_ax_b - z_bx_a\\
+x_ay_b - x_by_a\\
+\end{pmatrix}</script><p>简化算法</p>
+<script type="math/tex; mode=display">
+\vec{a}\times\vec{b} = A*\vec{b} = \begin{pmatrix}
+0 & -z_a & y_a\\
+z_a & 0 & -x_a\\
+-y_b & x_a & 0\\
+\end{pmatrix} * \begin{pmatrix}
+x_b\\
+y_b\\
+z_b\\
+\end{pmatrix}</script><p>叉乘作用：</p>
+<ol>
+<li>判断左和右，<strong>a</strong> x <strong>b</strong> &gt; 0， 则<strong>b</strong>在<strong>a</strong>的左侧，同理可判断内和外，比如三角形A、B、C三点和待判断点P，若AB x AP与BC x BP和CA x CP结果同正或同负，则点在三角形内</li>
+</ol>
+<p>矩阵：</p>
+<p>满足分配律和结合律</p>
+<script type="math/tex; mode=display">
+(AB)^T=B^TA^T</script><script type="math/tex; mode=display">
+AA^{-1}=A^{-1}A=I</script><script type="math/tex; mode=display">
+(AB)^{-1}=B^{-1}A^{-1}</script><h3 id="线性变换"><a href="#线性变换" class="headerlink" title="线性变换"></a>线性变换</h3><p>首先是线性变换，以三维为例：（等等！听这口气还有非线性的？）</p>
+<p>缩放（x轴缩放a倍，y轴缩放b倍，z轴缩放c倍）：</p>
+<script type="math/tex; mode=display">
+\left[\matrix{
+x^,\\
+y^,\\
+z^,\\
+}\right] = \left[\matrix{
+ax\\
+by\\
+cz\\
+}\right]=\left[\matrix{
+a&0&0\\
+0&b&0\\
+0&0&c\\
+}\right]\left[\matrix{
+x\\
+y\\
+z\\
+}\right]</script><p>对称（关于x轴对称，则x坐标不变，y、z坐标取反）</p>
+<script type="math/tex; mode=display">
+\left[\matrix{
+x^,\\
+y^,\\
+z^,\\
+}\right]=\left[\matrix{
+1&0&0\\
+0&-1&0\\
+0&0&-1\\
+}\right]\left[\matrix{
+x\\
+y\\
+z\\
+}\right]</script><p>错切(以x轴为错切方向)</p>
+<script type="math/tex; mode=display">
+\left[\matrix{
+x^,\\
+y^,\\
+z^,\\
+}\right]=\left[\matrix{
+1&a&0\\
+0&1&0\\
+0&0&1\\
+}\right]\left[\matrix{
+x\\
+y\\
+z\\
+}\right]</script><p>旋转</p>
+<p>绕x轴的旋转矩阵：$\left[\matrix{<br>1&amp;0&amp;0\<br>0&amp;cos\alpha&amp;-sin\alpha\<br>0&amp;sin\alpha&amp;cos\alpha\<br>}\right]$，绕y轴的旋转矩阵：$\left[\matrix{<br>cos\alpha&amp;0&amp;sin\alpha\<br>0&amp;1&amp;0\<br>-sin\alpha&amp;0&amp;cos\alpha\<br>}\right]$，</p>
+<p>绕z轴的旋转矩阵：$\left[\matrix{<br>cos\alpha&amp;-sin\alpha&amp;0\<br>sin\alpha&amp;cos\alpha&amp;0\<br>0&amp;0&amp;1\<br>}\right]$<br>旋转矩阵的逆变换就是转置矩阵$R^{-1}=R^T$。</p>
+<h3 id="非线性变换："><a href="#非线性变换：" class="headerlink" title="非线性变换："></a>非线性变换：</h3><p>平移</p>
+<script type="math/tex; mode=display">
+\left[\matrix{
+x^,\\
+y^,\\
+z^,\\
+1\\
+}\right]=\left[\matrix{
+x+a\\
+y+b\\
+z+c\\
+1\\
+}\right]=\left[\matrix{
+1&0&0&a\\
+0&1&0&b\\
+0&0&1&c\\
+0&0&0&1\\
+}\right]\left[\matrix{
+x\\
+y\\
+z\\
+1\\
+}\right]</script><p>平移不属于线性变换，因为它不满足线性变换中“变换前后原点不变”这一性质，无法用x、y、z变量来表达平移的距离常数。但平移操作和旋转缩放这些往往一起发生相互依赖，所以必须想个办法把它俩“中和”起来，上式就是“中和”的结果，变成了齐次变换矩阵，属于仿射变换。线性变换到齐次变换增加了一个维度来容纳非线性变换的平移，这样就可以用一个矩阵来同时容纳线性和平移（小孩才做选择题，大人是全都要）。即使都在一个矩阵里，也是先进行线性变换然后再进行平移变换。</p>
+<p>这里变换前点的坐标由(x, y, z)变成了(x, y, z, 1)，对应变换后的向量变成了(1, 0, 0, 0)、(0, 1, 0, 0)、(0, 0, 1, 0)，为啥点的后面拓展的维度值为1而向量拓展的值为0呢？其实是为了保持“中和”后线性变换和平移变换各自属性的不变性，也只有属性不变“中和”才是有意义的，才能得出正确的结果：</p>
+<ol>
+<li>3D $point = (x,y,z,1)^T$</li>
+<li>3D $point = (x,y,z,0)^T$</li>
+<li>$vector + vector = vector$</li>
+<li>$point - point = vector$</li>
+<li>$point + vector = point$</li>
+<li>$point + point = centerPoint(两个点的中点)$</li>
+</ol>
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/05/16/%E5%85%89%E7%85%A7/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">光照</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/05/01/Cesium%E4%B8%AD%E7%9A%84Clock/">
+                        <span class="hidden-mobile">Cesium中的Clock</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+<!-- Plugins -->
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "图形学中的点乘叉乘线性和非线性计算&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      getSearchFile(path);
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+<!-- MathJax -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+            const display = !!node.type.match(/; *mode=display/);
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+            const text = document.createTextNode('');
+            node.parentNode.replaceChild(text, node);
+            math.start = { node: text, delim: '', n: 0 };
+            math.end = { node: text, delim: '', n: 0 };
+            doc.math.push(math);
+          });
+        }, '', false],
+        insertedScript: [200, () => {
+          document.querySelectorAll('mjx-container').forEach(node => {
+            let target = node.parentNode;
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax');
+            }
+          });
+        }, '', false]
+      }
+    }
+  };
+</script>
+
+<script async src="https://cdn.staticfile.org/mathjax/3.0.5/es5/tex-svg.js" ></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
-  <title>线性变换点乘叉乘计算公式 - Hexo</title>
+  <title>光照 - Hexo</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -132,8 +132,8 @@
               
                 <div class="mt-3 post-meta">
                   <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-                  <time datetime="2020-05-02 12:17">
-                    星期六, 五月 2日 2020, 12:17 中午
+                  <time datetime="2020-05-16 17:35">
+                    星期六, 五月 16日 2020, 5:35 下午
                   </time>
                 </div>
               
@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    775 字
+                    1.7k 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    10
+                    18
                      分钟
                   </span>
                 
@@ -182,77 +182,42 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h1 id="图形学中的线性变换点乘叉乘计算"><a href="#图形学中的线性变换点乘叉乘计算" class="headerlink" title="图形学中的线性变换点乘叉乘计算"></a><center>图形学中的线性变换点乘叉乘计算<center></h1><h3 id="回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象"><a href="#回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象" class="headerlink" title="回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象"></a>回忆并整理一下以前关于计算机图形学中基础运算相关的笔记，加深印象</h3><h3 id="线性变换："><a href="#线性变换：" class="headerlink" title="线性变换："></a><strong>线性变换</strong>：</h3><p>线性变换是将向量作为输入和输出的一类函数，线性变换就是基向量的变换过程，线性变换矩阵就是变换后基向量的坐标（基向量默认为单位向量）。如果变换矩阵作为行列式其结果表示基向量变换后所构成平行四边形面积或平行六面体体积（如果变换前基向量不为单位向量，则此处为变化率）</p>
+              <h2 id="计算机图形学中的光照"><a href="#计算机图形学中的光照" class="headerlink" title="计算机图形学中的光照"></a><center>计算机图形学中的光照<center></h2><h3 id="像素"><a href="#像素" class="headerlink" title="像素"></a>像素</h3><p>像素是如何表现出颜色的呢？简单的回忆一下，计算机中如何表现出一个物体？首先需要将要表现的物体（无论是虚拟还是实物）抽象成可以用计算机识别的语言：离散的数字，来表现出来，听到这里抽象吧，当然，离散的数字描述一个物体可以有很多种方法，如何又快又准呢？世上安得双全法，性能和效果又得有个被牺牲掉，可成人的世界没有选择题：我想全都要怎么办？只能尽量满足要求：又快又好的代表性方法就是将物体的骨架抽象出来，就像美术画画一样，然后逐渐丰满。骨架是线图，可以离散成顶点然后连线得到，所以这里需要存储顶点信息，此外还需要存储点和点的匹配，就是哪两个点之间连线，带着这些思考开看图形学的渲染流程。第一步是vertexShader，它主要对顶点进行各种位置变换，这些位置变换就是现实中对物体空间位置变换的数学抽象，这里可以用各种表达式，主要是模型、视图、投影三个变换，然后还要变换到规范化立方体内，到这vertexShader算是做完了，折腾完之后还要根据你之前的顶点间的匹配关系：索引来对图形进行转配，并根据屏幕宽度和规范化立方体中物体的对应坐标进行光栅化，光栅化的过程涉及了很多的属性差值（因为顶点自身带有属性，可不只是位置属性），最后就到了fragmentShader中了。之所以进行属性插值是因为骨架肯定不够看，这也就是为什么很多人不喜欢骷髅，需要进行填充，为光栅化后产生的像素找到他们应属的颜色。很幸运，从图形装配到光栅化不需要我们配置，可视化引擎会自动帮我们处理，光栅化后每个像素就具有了顶点属性插值后的结果，也就是说插值后fragmentShader中的像素就具有了颜色和位置（当然，需要vertexShader中有对应的属性和设置），然后将这些颜色输出到颜色缓冲区中就会在屏幕上显示了。你可能会说这里没有光照的事呀？因为这是简化版，光照一般都是在fragmentShader中进行处理，来模拟现实世界。</p>
+<h3 id="着色频率"><a href="#着色频率" class="headerlink" title="着色频率"></a>着色频率</h3><p>Phong模型对每个像素点插值出该点法线然后计算光照（发生在fragmentShader中，因为操作对象是像素）；Gouraud是根据顶点的法向量计算出顶点对应的颜色，然后插值出内部像素的颜色；Flat模型是对每个面进行一次光照计算。</p>
+<h3 id="Blinn-Phong光照模型"><a href="#Blinn-Phong光照模型" class="headerlink" title="Blinn-Phong光照模型"></a>Blinn-Phong光照模型</h3><p>这里以Blinn-Phong光照模型为例，用到了三种类型：漫反射、镜面反射、环境光反射</p>
+<p>漫反射公式Lambertian（Diffuse）Shading</p>
 <script type="math/tex; mode=display">
-\left[\matrix{a&b\\c&d\\}\right]\left[\matrix{x\\y\\}\right]=x\left[\matrix{a\\c\\}\right]+y\left[\matrix{b\\d\\}\right]</script><p>基向量<strong>i</strong>变换后的坐标为（a，c），基向量<strong>j</strong>变换后的坐标为（b，d）</p>
-<p><strong>特点</strong>：保持格网平行且等距的变换，同时保持原点不变。</p>
-<h3 id="Dot（点积或点乘）"><a href="#Dot（点积或点乘）" class="headerlink" title="Dot（点积或点乘）"></a>Dot（点积或点乘）</h3><p><strong>结果</strong>：为一个<strong>值</strong>，表示<strong>b</strong>在<strong>a</strong>上的投影与<strong>a</strong>模的乘积（其实是一个长度，即<strong>b</strong>投影的长度<strong>*a</strong>的长度），当<strong>a</strong>、<strong>b</strong>为单位向量时，值为其夹角的余弦值。</p>
-<p><strong>理解</strong>：点积是一个降维的过程，从上面的结果就可看出，因为投影本身就是降维。 $\vec{a}\cdot\vec{b}$就是将第一个向量<strong>a</strong>转化为（推倒）线性变换矩阵，第二个向量<strong>b</strong>可以看成待变换点。</p>
-<p>计算公式：</p>
+L_d=k_d(I/r^2)max(0,n\cdot l)</script><p>$L_d$表示漫反射反射的光能量，$k_d$表示物体吸收能量的比率，$I/r^2$表示物体能接受到的能量与光源散发的总能量的距离平方成反比，$n\cdot l$中表示接收到的光与该接受点的法线和入射光方向向量之间的关系，其中<em>n</em>表示反射点（或面）的法线，<em>l</em>表示光线入射方向（这里是从反射点指向光源），之所以加个<em>max</em>变成$max(0,n\cdot l)$因为当光线从面的背面射过来时$n\cdot l$为负值，此时无意义（光从背面射过来无意义，这里不考虑折射），所以用max来进行过滤，使其最小值非负。</p>
+<p>公式中没有涉及出射方向，是因为漫反射向各个方向反射的能量相同</p>
+<p>镜面反射Blinn-Phong</p>
 <script type="math/tex; mode=display">
-\vec{a}\cdot\vec{b} = ||a||*||b||*cos\theta</script><p>点成满足交换律</p>
+L_s=k_s(I/r^2)max(0,n\cdot h)^p</script><p>式中，<strong>h</strong>表示半程向量，即入射方向，$h=\frac{v+l}{||v + l||}$,<strong>v</strong>为入射方向，<strong>l</strong>为观察方向，<strong>n</strong>为法向，计算半程向量比计算反射方向简单却都能表示观察方向与反射方向的夹角大小。p表示幂次方，这样角度偏差一点就不会认定为高光了。</p>
+<p>漫反射</p>
 <script type="math/tex; mode=display">
-\vec{a}\cdot\vec{b} = \vec{b}\cdot\vec{a}</script><p>分配律</p>
+L_a=k_aI_a</script><p>总体光照模型(Blinn-Phong)：</p>
 <script type="math/tex; mode=display">
-\vec{a}\cdot(\vec{b} + \vec{c}) = \vec{a}\cdot\vec{b} + \vec{a}\cdot\vec{c}</script><p>结合律</p>
-<script type="math/tex; mode=display">
-(k*\vec{a})\cdot\vec{b} = \vec{a}\cdot(k*\vec{b}) = k*(\vec{a}\cdot\vec{b})</script><p>二维点积</p>
-<script type="math/tex; mode=display">
-\vec{a}\cdot\vec{b} = \begin{pmatrix}
-x_a\\
-y_b\\
-\end{pmatrix} * \begin{pmatrix}
-x_b\\
-y_a\\
-\end{pmatrix} = x_ax_b + y_ay_b</script><p>三维点积</p>
-<script type="math/tex; mode=display">
-\vec{a}\cdot\vec{b} = \begin{pmatrix}
-x_a\\
-y_a\\
-z_a\\
-\end{pmatrix} * \begin{pmatrix}
-x_b\\
-y_b\\
-z_b\\
-\end{pmatrix} = x_ax_b + y_ay_b + z_az_b</script><p>点乘作用：</p>
-<ol>
-<li>可以当做<strong>b</strong>在<strong>a</strong>上的投影，根据投影后的结果<strong>b1</strong>对<strong>b</strong>进行分解</li>
-<li>可以判断<strong>a</strong>和<strong>b</strong>的方向</li>
-</ol>
-<h3 id="Cross"><a href="#Cross" class="headerlink" title="Cross"></a>Cross</h3><p><strong>结果</strong>：为一个向量，该向量垂直于<strong>a</strong>、<strong>b</strong>，向量的模（长度大小）为两向量组成平行四边行的面积</p>
-<script type="math/tex; mode=display">
-||a\times b|| = ||a||*||b||*sin\varphi</script><p>不满足交换律</p>
-<script type="math/tex; mode=display">
-\vec{a}\times\vec{b} = -\vec{b}\times\vec{a}</script><p>分配律</p>
-<script type="math/tex; mode=display">
-\vec{a}\times(\vec{b} + \vec{c}) = \vec{a}\times\vec{b} + \vec{a}\times\vec{c}</script><p>结合律</p>
-<script type="math/tex; mode=display">
-\vec{a}\times(k*\vec{b}) = k*(\vec{a}\times\vec{b})</script><p>三维叉乘</p>
-<script type="math/tex; mode=display">
-\vec{a}\times\vec{b} = \begin{pmatrix}
-y_az_b - y_bz_a\\
-z_ax_b - z_bx_a\\
-x_ay_b - x_by_a\\
-\end{pmatrix}</script><p>简化算法</p>
-<script type="math/tex; mode=display">
-\vec{a}\times\vec{b} = A*\vec{b} = \begin{pmatrix}
-0 & -z_a & y_a\\
-z_a & 0 & -x_a\\
--y_b & x_a & 0\\
-\end{pmatrix} * \begin{pmatrix}
-x_b\\
-y_b\\
-z_b\\
-\end{pmatrix}</script><p>叉乘作用：</p>
-<ol>
-<li>判断左和右，<strong>a</strong> x <strong>b</strong> &gt; 0， 则<strong>b</strong>在<strong>a</strong>的左侧，同理可判断内和外，比如三角形A、B、C三点和待判断点P，若AB x AP与BC x BP和CA x CP结果同正或同负，则点在三角形内</li>
-</ol>
-<p>矩阵：</p>
-<p>满足分配律和结合律</p>
-<script type="math/tex; mode=display">
-(AB)^T=B^TA^T</script><script type="math/tex; mode=display">
-AA^{-1}=A^{-1}A=I</script><script type="math/tex; mode=display">
-(AB)^{-1}=B^{-1}A^{-1}</script>
+L=L_a+L_d+L_s=k_aI_a+k_d(I/r^2)max(0,n\cdot l)+k_s(I/r^2)max(0,n\cdot h)^p</script><p>式中的$k_d$常用纹理颜色来代替，以<a href="https://www.bilibili.com/video/BV1X7411F744?p=7" target="_blank" rel="noopener">GAMS101课程</a>中的一段作业代码来表示：</p>
+<pre><code class="hljs glsl">Vector3f result_color = &#123;<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>&#125;;
+<span class="hljs-comment">// 对每个光源都要进行一次</span>
+<span class="hljs-keyword">for</span> (auto&amp; light : lights)
+&#123;
+  <span class="hljs-comment">// 半程向量</span>
+  Vector3f half_vector = (light_dir + view_dir).normalized();
+  <span class="hljs-comment">// 环境光计算，当然ka可以是常数也可以是向量，下式中就是向量，当是向量时可以更精确的描述不同颜色的反射率</span>
+  <span class="hljs-comment">// 当ka是向量时，由于color也是向量，就需要用到了cwiseProduct，这个公式作用是两个向量对应分量相乘后产生的新向量</span>
+  <span class="hljs-comment">// amb_light_intensity表示环境光强度</span>
+  Vector3f ambient_color = ka.cwiseProduct(amb_light_intensity);
+  <span class="hljs-comment">// 漫反射光计算，这里常用纹理的归一化颜色表示kd</span>
+  Vector3f diffuse_color = kd.cwiseProduct(light.intensity / light_dis * MAX(<span class="hljs-number">0.0</span>f, normal.normalized().<span class="hljs-built_in">dot</span>(light_dir.normalized())));
+  <span class="hljs-comment">// 镜面反射光计算</span>
+  Vector3f specular_color = ks.cwiseProduct(light.intensity / light_dis * <span class="hljs-built_in">pow</span>(MAX(<span class="hljs-number">0.0</span>f, normal.normalized().<span class="hljs-built_in">dot</span>(half_vector.normalized())), p));
+  <span class="hljs-comment">// 最终反射光计算</span>
+  result_color += ambient_color + diffuse_color + specular_color;
+&#125;
+<span class="hljs-keyword">return</span> result_color * <span class="hljs-number">255.</span>f;</code></pre>
+<p>上面是光栅化成像的过程，代码发生在片元着色器中，也就是每个像素都会执行一次，代码中已知光源的位置，所以默认光传播途中只发生了一次反射就传入了相机中，简单，快速，但效果肯定有不足，现实生活中的光都是经过数次甚至数百数万次反射后进入人眼比如背阳的房间，白天时没有直接的光源但却伸手看得见五指，如果用Blinn-Phong的话可以想象，只有极少的光源能通过一次反射从窗或门照进来。要模拟这种效果就需要模拟光的n次反射，就需要用到了光线追踪了，当然，前面说的光栅化成像肯定也能做到，只是非常的复杂。</p>
+<p>光线追踪和光栅化是两个不同的过程</p>
+
             </article>
             <hr>
             <div>
@@ -272,8 +237,8 @@ AA^{-1}=A^{-1}A=I</script><script type="math/tex; mode=display">
                   <div class="post-next col-6">
                     
                     
-                      <a href="/2020/05/01/Cesium%E4%B8%AD%E7%9A%84Clock/">
-                        <span class="hidden-mobile">Cesium中的Clock</span>
+                      <a href="/2020/05/02/%E5%9B%BE%E5%BD%A2%E5%AD%A6%E4%B8%AD%E7%9A%84%E7%82%B9%E4%B9%98%E5%8F%89%E4%B9%98%E7%BA%BF%E6%80%A7%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E8%AE%A1%E7%AE%97/">
+                        <span class="hidden-mobile">图形学中的点乘叉乘线性和非线性计算</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
@@ -413,7 +378,7 @@ AA^{-1}=A^{-1}A=I</script><script type="math/tex; mode=display">
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "线性变换点乘叉乘计算公式&nbsp;",
+        "光照&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
@@ -469,48 +434,9 @@ AA^{-1}=A^{-1}A=I</script><script type="math/tex; mode=display">
         $(this).wrap(element);
       }
     );
-  </script>
+  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
 
 
-
-
-
-
-
-
-<!-- MathJax -->
-<script>
-  MathJax = {
-    tex: {
-      inlineMath: [['$', '$'], ['\\(', '\\)']]
-    },
-    options: {
-      renderActions: {
-        findScript: [10, doc => {
-          document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
-            const display = !!node.type.match(/; *mode=display/);
-            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
-            const text = document.createTextNode('');
-            node.parentNode.replaceChild(text, node);
-            math.start = { node: text, delim: '', n: 0 };
-            math.end = { node: text, delim: '', n: 0 };
-            doc.math.push(math);
-          });
-        }, '', false],
-        insertedScript: [200, () => {
-          document.querySelectorAll('mjx-container').forEach(node => {
-            let target = node.parentNode;
-            if (target.nodeName.toLowerCase() === 'li') {
-              target.parentNode.classList.add('has-jax');
-            }
-          });
-        }, '', false]
-      }
-    }
-  };
-</script>
-
-<script async src="https://cdn.staticfile.org/mathjax/3.0.5/es5/tex-svg.js" ></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
 
 
 
