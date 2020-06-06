@@ -216,7 +216,7 @@ L=L_a+L_d+L_s=k_aI_a+k_d(I/r^2)max(0,n\cdot l)+k_s(I/r^2)max(0,n\cdot h)^p</scri
 &#125;
 <span class="hljs-keyword">return</span> result_color * <span class="hljs-number">255.</span>f;</code></pre>
 <p>上面是光栅化成像的过程，代码发生在片元着色器中，也就是每个像素都会执行一次，代码中已知光源的位置，所以默认光传播途中只发生了一次反射就传入了相机中，简单，快速，但效果肯定有不足，现实生活中的光都是经过数次甚至数百数万次反射后进入人眼比如背阳的房间，白天时没有直接的光源但却伸手看得见五指，如果用Blinn-Phong的话可以想象，只有极少的光源能通过一次反射从窗或门照进来。要模拟这种效果就需要模拟光的n次反射，就需要用到了光线追踪了，当然，前面说的光栅化成像肯定也能做到，只是非常的复杂。</p>
-<p>光线追踪和光栅化是两个不同的过程</p>
+<p>光线追踪和光栅化是两个不同的过程，下一篇文章说说光线追踪</p>
 
             </article>
             <hr>
@@ -232,6 +232,12 @@ L=L_a+L_d+L_s=k_aI_a+k_d(I/r^2)max(0,n\cdot l)+k_s(I/r^2)max(0,n\cdot h)^p</scri
                 <div class="post-prevnext row">
                   <div class="post-prev col-6">
                     
+                    
+                      <a href="/2020/05/22/%E5%85%89%E7%BA%BF%E8%BF%BD%E8%B8%AA/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">光线追踪</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </div>
                   <div class="post-next col-6">
@@ -434,9 +440,48 @@ L=L_a+L_d+L_s=k_aI_a+k_d(I/r^2)max(0,n\cdot l)+k_s(I/r^2)max(0,n\cdot h)^p</scri
         $(this).wrap(element);
       }
     );
-  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  </script>
 
 
+
+
+
+
+
+
+<!-- MathJax -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+            const display = !!node.type.match(/; *mode=display/);
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+            const text = document.createTextNode('');
+            node.parentNode.replaceChild(text, node);
+            math.start = { node: text, delim: '', n: 0 };
+            math.end = { node: text, delim: '', n: 0 };
+            doc.math.push(math);
+          });
+        }, '', false],
+        insertedScript: [200, () => {
+          document.querySelectorAll('mjx-container').forEach(node => {
+            let target = node.parentNode;
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax');
+            }
+          });
+        }, '', false]
+      }
+    }
+  };
+</script>
+
+<script async src="https://cdn.staticfile.org/mathjax/3.0.5/es5/tex-svg.js" ></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
 
 
 
