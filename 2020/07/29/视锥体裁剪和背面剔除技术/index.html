@@ -222,7 +222,7 @@ f.bottom += frustum.yOffset;</code></pre>
 <p>相机的<code>direction</code>对应视锥体坐标系中的<strong>绿轴</strong>向量，<code>right</code>对应视锥体坐标系中的<strong>红轴</strong>向量，<code>up</code>对应视锥体坐标系中的<strong>蓝轴</strong>向量，这里绿、红、蓝轴正好和球心所在的笛卡尔坐标系中的绿、红、蓝轴平行了，正常情况下两者坐标系很可能不一，需要做旋转平移变换；</p>
 <p>浅绿色四棱锥代表视锥体，<em>CDEF</em>代表<strong>近平面</strong>，<em>H</em>代表近平面<strong>左边中点</strong>，<em>G</em>（四棱锥顶点）代表<strong>相机视点</strong>，蓝色星球代表地球，视锥体的绿轴与近平面的交点<em>O</em>就是近平面中点，紫色线为左平面法向量（图只是示例，实际法向量指向视锥体内部，下面有详细说明）；</p>
 <p>球心所在的原点为笛卡尔三维坐标系，视锥体的绿轴与近平面的交点O就是近平面中点；</p>
-<p><img src="C:/Users/Yaoyuan/AppData/Roaming/Typora/typora-user-images/image-20200902084709681.png" srcset="/img/loading.gif" alt="凑活看吧，没艺术天分的"></p>
+<p><img src="https://raw.githubusercontent.com/AOldDriverA/BlogFigurebed/master/img/image-20200902084709681.png" srcset="/img/loading.gif" alt="凑活看吧，没艺术天分的"></p>
 <pre><code class="hljs javascript">PerspectiveOffCenterFrustum.prototype.computeCullingVolume = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">position, direction, up</span>) </span>&#123;
   <span class="hljs-keyword">var</span> planes = <span class="hljs-keyword">this</span>._cullingVolume.planes;
   <span class="hljs-comment">// 将上面求得的一大坨丢到下面</span>
@@ -314,7 +314,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = <span class="hljs-fun
   <span class="hljs-keyword">return</span> intersection;
 &#125;;</code></pre>
 <p>展开上段代码中第10行<code>cullingVolume.computeVisibility(boundingVolume)</code>函数，里面调用的是包围球与视锥体平面之间的包含关系判断</p>
-<p><img src="C:/Users/Yaoyuan/AppData/Roaming/Typora/typora-user-images/image-20200902101446819.png" srcset="/img/loading.gif" alt="包围球与视锥体相交判断简化图"></p>
+<p><img src="https://raw.githubusercontent.com/AOldDriverA/BlogFigurebed/master/img/image-20200902101446819.png" srcset="/img/loading.gif" alt="包围球与视锥体相交判断简化图"></p>
 <p>如上丑图所示，大家咀嚼一下</p>
 <pre><code class="hljs javascript">BoundingSphere.intersectPlane = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">sphere, plane</span>) </span>&#123;
   <span class="hljs-keyword">var</span> center = sphere.center; <span class="hljs-keyword">var</span> radius = sphere.radius; <span class="hljs-keyword">var</span> normal = plane.normal;
@@ -642,9 +642,48 @@ cos(β)=\frac{\vec{VT}\cdot\vec{VC}}{||\vec{VT}||\cdot||\vec{VC}||}</script><scr
         $(this).wrap(element);
       }
     );
-  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  </script>
 
 
+
+
+
+
+
+
+<!-- MathJax -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+            const display = !!node.type.match(/; *mode=display/);
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+            const text = document.createTextNode('');
+            node.parentNode.replaceChild(text, node);
+            math.start = { node: text, delim: '', n: 0 };
+            math.end = { node: text, delim: '', n: 0 };
+            doc.math.push(math);
+          });
+        }, '', false],
+        insertedScript: [200, () => {
+          document.querySelectorAll('mjx-container').forEach(node => {
+            let target = node.parentNode;
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax');
+            }
+          });
+        }, '', false]
+      }
+    }
+  };
+</script>
+
+<script async src="https://cdn.staticfile.org/mathjax/3.0.5/es5/tex-svg.js" ></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
 
 
 
