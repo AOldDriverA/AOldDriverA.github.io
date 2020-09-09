@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    30
+                    29
                      分钟
                   </span>
                 
@@ -320,7 +320,7 @@ subType.prototype = prototype;		<span class="hljs-comment">// 指定对象</span
     <span class="hljs-keyword">let</span> obj = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Object</span>();
     <span class="hljs-comment">// 获取传入的第一个参数，同时将其从args中删除（shift为删除数组首元素，会改变原数组）</span>
     <span class="hljs-comment">// 这里第一个参数为输入的构造函数，其余参数为该构造函数的参数</span>
-    <span class="hljs-keyword">let</span> Constructor = <span class="hljs-built_in">Array</span>.prototype.shift.call(obj, args);
+    <span class="hljs-keyword">let</span> Constructor = <span class="hljs-built_in">Array</span>.prototype.shift.call(args);
     <span class="hljs-comment">// 将构造函数的原型稳稳的交付给obj,并希望它以后也能用上</span>
     obj.__proto__ = Constructor.prototype;
     <span class="hljs-comment">// 领着obj走一遍构造流程，把收货再交给result</span>
