@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    77 字
+                    4.3k 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    1
+                    52
                      分钟
                   </span>
                 
@@ -182,7 +182,349 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h1 id="通视分析，以Cesium为例"><a href="#通视分析，以Cesium为例" class="headerlink" title="通视分析，以Cesium为例"></a><center>通视分析，以Cesium为例</center></h1><p>回顾一下通视分析的实现场景，力求事无巨细的说明，同样以Cesium为例。（网上的例子确实烂大街了，但还是希望能够完完整整的呈现给大家），先占个坑，这两天忙完就开始写</p>
+              <h1 id="通视分析，以Cesium为例"><a href="#通视分析，以Cesium为例" class="headerlink" title="通视分析，以Cesium为例"></a><center>通视分析，以Cesium为例</center></h1><p>回顾一下通视分析的实现场景！先来张效果图。虽然网上例子一大堆，但有些没讲透彻有些直接上代码，要看懂还有有些烦，所以本文希望能填补这些缺点，先将原理，然后将思路同时结合代码（代码中也有详细的注释）。现在开源的知识很多，但只有学会了才是自己的。</p>
+<p><img src="https://raw.githubusercontent.com/AOldDriverA/BlogFigurebed/master/img/image-20200923104525833.png" srcset="/img/loading.gif" alt="image-20200923104525833"></p>
+<p>在开始一个小功能开发之前，先明确应用的效果或者最终展现出来的效果是什么样的。通视分析或者可视域分析就是将一个模拟的视点在一定视角情况下哪些是可见的、不可见的呈现出来。进一步描述一下，首先需要一个模拟的视点（可以通过鼠标点选），然后需要一个四棱锥或圆锥体来可视化视锥体（并能随着鼠标点进行移动），最后需要将模拟视点可见区域着上色为绿色，不可见为红色。最终要实现的效果出来之后，就开始分别实现了。</p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>因为是展示模拟视点在模拟视角（视锥体）的情况下可见、不可见情况，所以，只需要将真正的相机放在模拟视点并设置模拟视角为相机的视角，此时相机中就记录了该点该视线方向和视角的情况下可见区域，然后进入webGL图形管线，经过光栅化后，将可见区域离散化到纹理缓冲区中的一个个像素上。像素有RGBA四个分量，一般存的是颜色，当然，你存该像素对应物体到该像素（像素位于近裁剪面上）的距离也没一点问题，纹理缓冲区完全听你的，所以咱们就这样做，把各个像素与其所表示物体间距离存到像素的RBGA分量上（整形）。然后把所有像素所在的纹理缓冲区保存起来，后面使用。</p>
+<p>一个世界如果想描述所有物体，必须有一个统一和唯一坐标，称之为世界坐标，大家只有有一个公共的桥梁联通才能相互交流嘛，物体本身有局部坐标系，然后通过模型视图矩阵变换到世界坐标系，再通过投影变换到近裁剪面上的坐标；同样可以通过投影变换逆变换到世界坐标系，再通过视图模型矩阵最终变换会局部坐标系。啰嗦这些不是为了将你们绕晕，咱们屏幕中所见的是真实相机的真实视锥体近裁剪面上画面，当然屏幕中的像素也对应近裁剪面离散化后结果，也就是说，咱们可以确定屏幕中像素对应的近裁剪面坐标，然后从视点发出射线，穿过该像素的近裁剪面坐标，计算与场景中物体的交点，这一步用到了投影变换一边换—近裁剪面坐标转为世界坐标，计算出来的交点就是世界坐标，然后世界坐标在通过模拟视点、模拟视锥体对应的投影变换变换到模拟视锥体近裁剪面上，找到离散化后对应的像素坐标，就得到了交点与像素之间的距离。还记得上一段中保存起来的纹理缓冲区么？根据像素坐标去里面取出相应像素的值也就是像素到物体的距离，然后和这个像素与交点的距离进行比较，如果交点与像素的距离大于像素与物体距离，则说明交点位于模拟视点的不可见处，即阴影处，然后交点所在的物体在真实相机视角下就应该是红色（因为该点在模拟视点中不可见）。没图硬扯不知你们会不会晕。</p>
+<h3 id="1-初始化"><a href="#1-初始化" class="headerlink" title="1.初始化"></a>1.初始化</h3><p>算是正式开始前的准备工作，先开启阴影和深度缓冲区，只有开启了深度缓冲区，才能缓存深度（也就是物体与像素的距离）信息，只有开启阴影，地面上才能显示阴影。因为可见不可见本身是通过阴影的原理实现的。然后绑定鼠标事件，这里主要用到了鼠标左键双击和移动事件，构想是这样的，鼠标双击选点，然后移动调整观察方向，最终再次双击选择终点，得到完整的通视分析效果。具体解析通过代码结合注释食用。这里将鼠标移动的绑定事件放到了鼠标左键双击绑定里，只有选点时的双击触发时，才会进行下一步的鼠标移动绑定，选点结束的鼠标双击会自动结束鼠标移动绑定。</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">// 开启地形接受和投射阴影. ENABLED表示即接受阴影也投射阴影，DISABLED表示不接受也不投射，</span>
+<span class="hljs-comment">// CAST_ONLY表示只投射阴影，RECEIVE_ONLY表示只接受阴影</span>
+<span class="hljs-keyword">this</span>.viewer.terrainShadows = Cesium.ShadowMode.ENABLED;
+<span class="hljs-comment">// 开启地形的深度测试</span>
+<span class="hljs-keyword">this</span>.depthTest = <span class="hljs-keyword">this</span>.viewer.scene.globe.depthTestAgainstTerrain;
+<span class="hljs-comment">// 初始化鼠标点击事件</span>
+<span class="hljs-keyword">this</span>.mouseHandler = <span class="hljs-keyword">new</span> Cesium.ScreenSpaceEventHandler(<span class="hljs-keyword">this</span>.viewer.scene.canvas);
+
+<span class="hljs-comment">// 添加鼠标左键点击事件</span>
+<span class="hljs-comment">// 第一次点击选择模拟观察点位置</span>
+<span class="hljs-comment">// 第二次点击选择模拟视锥体的结束位置</span>
+<span class="hljs-keyword">this</span>.mouseHandler.setInputAction(<span class="hljs-function">(<span class="hljs-params">mouseClickEvent</span>) =&gt;</span> &#123;
+  <span class="hljs-comment">// 说明是第一次点击</span>
+  <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.isDrawViewshed) &#123;
+    <span class="hljs-comment">// 获取模拟观察点的三维坐标（由二维屏幕坐标转换得到）</span>
+    <span class="hljs-keyword">this</span>.viewPoint = <span class="hljs-keyword">this</span>.viewer.camera.pickEllipsoid(mouseClickEvent.position);
+    <span class="hljs-keyword">this</span>.viewPoint = Cesium.Cartesian3.fromDegrees(<span class="hljs-number">116.3411</span>, <span class="hljs-number">39.9955</span>, <span class="hljs-number">50</span>);
+    <span class="hljs-comment">// 不管之前的面片有没有，都清空一次</span>
+    <span class="hljs-keyword">this</span>.frustumEntities = [];
+    <span class="hljs-comment">// 创建视锥体，主要是初始化主体函数，并修改了源代码，来选定可见、不可见区域颜色</span>
+    <span class="hljs-keyword">this</span>.createViewshed(<span class="hljs-keyword">this</span>.viewPoint);
+    <span class="hljs-comment">// 绘制模拟观察点（确实是一个点）</span>
+    <span class="hljs-keyword">this</span>.viewPointGeometry = <span class="hljs-keyword">this</span>.viewer.entities.add(&#123;
+      position: <span class="hljs-keyword">this</span>.viewPoint,
+      point: &#123;
+        pixelSize: <span class="hljs-number">12</span>,
+        color: Cesium.Color.YELLOW,
+        disableDepthTestDistance: <span class="hljs-built_in">Number</span>.POSITIVE_INFINITY
+      &#125;
+    &#125;)
+
+    <span class="hljs-comment">// 添加鼠标移动事件（之所以放到这里面为了提高效率）</span>
+    <span class="hljs-keyword">this</span>.mouseHandler.setInputAction(<span class="hljs-function">(<span class="hljs-params">mouseMoveEvent</span>) =&gt;</span> &#123;
+      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.isDrawViewshed) &#123;
+        <span class="hljs-keyword">this</span>.viewEndPoint = <span class="hljs-keyword">this</span>.viewer.scene.pickPosition(mouseMoveEvent.endPosition);
+        <span class="hljs-comment">// 计算更新视锥体姿态</span>
+        <span class="hljs-keyword">this</span>.calculatePose();
+        <span class="hljs-comment">// 根据姿态创建变换矩阵和视锥体点并绘制</span>
+        <span class="hljs-keyword">this</span>.createFrustum();
+      &#125;
+    &#125;, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    <span class="hljs-keyword">this</span>.isDrawViewshed = <span class="hljs-literal">true</span>;
+  &#125; <span class="hljs-keyword">else</span> &#123;
+    <span class="hljs-comment">// 说明是第二次点击，此时已经选好了模拟视锥体的终点</span>
+    <span class="hljs-keyword">this</span>.isDrawViewshed = <span class="hljs-literal">false</span>;
+    <span class="hljs-comment">// 解除鼠标移动事件</span>
+    <span class="hljs-keyword">this</span>.mouseHandler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  &#125;
+&#125;, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);</code></pre>
+<h3 id="2-绘制顶点"><a href="#2-绘制顶点" class="headerlink" title="2.绘制顶点"></a>2.绘制顶点</h3><p>第一次点击时确定模拟观察点，然后初始化视锥体createViewshed()</p>
+<p>从<strong>原理</strong>中可知，模拟视点和模拟视锥体本质也相当于一个相机，为了更好的描述模拟视锥体，在createViewshed函数中，创建了一个对象：spotLight，类型为相机类型Camera，frustum属性就是视锥体属性，这里fov、aspectRatio、near和far是我随意赋值的，使用时可以外部传参。然后构造shadowOptions。为什么要构造shadowOptions？因为可以借用cesium自身提供的阴影缓冲区，这一块后面有时间的话会详细说的。最后更改cesium的glsl，将可见的不可见的设置为绿色和红色。</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">// 这里构造了一个Camera类来模拟视锥体，因为视锥体和相机是紧密结合的，视锥体会用到相机里的一些方法</span>
+<span class="hljs-keyword">this</span>.spotLight = <span class="hljs-keyword">new</span> Cesium.Camera(<span class="hljs-keyword">this</span>.viewer.scene);
+<span class="hljs-keyword">this</span>.spotLight.position = position;
+<span class="hljs-comment">// 设置视锥体参数</span>
+<span class="hljs-keyword">this</span>.spotLight.frustum.fov = Cesium.Math.PI_OVER_THREE;
+<span class="hljs-keyword">this</span>.spotLight.frustum.aspectRatio = <span class="hljs-number">1.0</span>;
+<span class="hljs-keyword">this</span>.spotLight.frustum.near = <span class="hljs-number">1.0</span>;
+<span class="hljs-keyword">this</span>.spotLight.frustum.far = <span class="hljs-number">10.0</span>;
+<span class="hljs-comment">// 设置阴影参数</span>
+<span class="hljs-keyword">this</span>.shadowOptions = &#123;
+  context: <span class="hljs-keyword">this</span>.viewer.scene.context,
+  enabled: <span class="hljs-literal">true</span>,
+  lightCamera: <span class="hljs-keyword">this</span>.spotLight,
+  maximumDistance: <span class="hljs-number">5000.0</span>,
+  size: <span class="hljs-number">4096</span>,
+  cascadesEnabled: <span class="hljs-literal">false</span>
+&#125;
+<span class="hljs-comment">// 创建阴影（利用Cesium写好的类）</span>
+<span class="hljs-keyword">this</span>.viewer.scene.shadowMap = <span class="hljs-keyword">new</span> Cesium.ShadowMap(<span class="hljs-keyword">this</span>.shadowOptions);
+
+<span class="hljs-comment">// 修改glsl来改变颜色（修改Cesium写好的类）</span>
+<span class="hljs-keyword">let</span> createShadowReceiveFragmentShader = Cesium.ShadowMapShader.createShadowReceiveFragmentShader;
+Cesium.ShadowMapShader.createShadowReceiveFragmentShader = <span class="hljs-function">(<span class="hljs-params">fs, shadowMap, castShadows, isTerrain, hasTerrainNormal</span>) =&gt;</span> &#123;
+  <span class="hljs-keyword">let</span> fragmentShader = createShadowReceiveFragmentShader(fs, shadowMap, castShadows, isTerrain, hasTerrainNormal);
+  <span class="hljs-keyword">let</span> colorFS = <span class="hljs-string">` if (visibility == 1.0) &#123;</span>
+<span class="hljs-string">gl_FragColor.rgb *= vec3(0.2, 1.0, 0.2);</span>
+<span class="hljs-string">&#125; else &#123;</span>
+<span class="hljs-string">gl_FragColor.rgb *= vec3(1.0, 0.2, 0.2);</span>
+<span class="hljs-string">&#125;`</span>;
+  fragmentShader.sources[fragmentShader.sources.length - <span class="hljs-number">1</span>] = fragmentShader.sources[fragmentShader.sources.length - <span class="hljs-number">1</span>].replace(<span class="hljs-string">'gl_FragColor.rgb *= visibility'</span>, colorFS);
+  <span class="hljs-keyword">return</span> fragmentShader;
+&#125;</code></pre>
+<h3 id="3-根据MOUSE-MOVE计算视锥体姿态"><a href="#3-根据MOUSE-MOVE计算视锥体姿态" class="headerlink" title="3.根据MOUSE_MOVE计算视锥体姿态"></a>3.根据MOUSE_MOVE计算视锥体姿态</h3><p>下段代码是calculatePose()函数，计算视锥体姿态其实就是计算局部坐标系下模拟视锥体（后文除非特殊说明，否则视锥体都是指模拟视锥体）自身的direction、right和up三个轴的指向（三个轴两两之间垂直）。局部坐标系指的是ENU（east、north、up）坐标系，正常情况下，知道direction和up就当相当于知道了模型变换，Cesium使用direction和up计算出heading、pitch、roll。注意！Cesium的heading、pitch、roll围绕的换转轴分别指向down、west和south也就是和up、east、north<strong>正好相反</strong>，后面还会说的。</p>
+<p>那么，direction怎么求呢？鼠标移动的点作为终点，鼠标双击时选的模拟视点作为起点，这样：终点 - 起点 = direction（向量）。然后计算right轴，起点本身也是一个向量，它是原点指向起点的这么非单位向量，先对其归一化，direction叉乘这个归一化后的向量得到right向量，right向量叉乘direction得到up向量。注意两个数叉乘的先后顺序影响结果向量的指向（指向正轴还是负轴）。然后巧妙的借用Cesium中camera函数的setView方法，通过up和direction得到对应的heading、pitch、roll。</p>
+<pre><code class="hljs javascript"><span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.viewEndPoint) <span class="hljs-keyword">return</span>;
+
+<span class="hljs-comment">// 可视域的视线向量（direction）</span>
+<span class="hljs-keyword">this</span>.viewDirection = <span class="hljs-keyword">new</span> Cesium.Cartesian3();
+Cesium.Cartesian3.subtract(<span class="hljs-keyword">this</span>.viewEndPoint, <span class="hljs-keyword">this</span>.viewPoint, <span class="hljs-keyword">this</span>.viewDirection);
+<span class="hljs-comment">// 向量长度(模拟观察点到模拟观察视锥体远裁剪面距离)</span>
+<span class="hljs-keyword">this</span>.frustumFar = Cesium.Cartesian3.magnitude(<span class="hljs-keyword">this</span>.viewDirection);
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.frustumFar &lt;= <span class="hljs-number">1</span>) <span class="hljs-keyword">return</span>;
+<span class="hljs-comment">// 归一化向量</span>
+Cesium.Cartesian3.normalize(<span class="hljs-keyword">this</span>.viewDirection, <span class="hljs-keyword">this</span>.viewDirection);
+<span class="hljs-comment">// 保存当前viewer中相机的以下信息，因为待会会带入模拟观察视锥体</span>
+<span class="hljs-keyword">let</span> curView = <span class="hljs-keyword">this</span>.viewer.scene.frameState.camera;
+<span class="hljs-keyword">let</span> curViewHeading = curView.heading;
+<span class="hljs-keyword">let</span> curViewPitch = curView.pitch;
+<span class="hljs-keyword">let</span> curViewRoll = curView.roll;
+<span class="hljs-keyword">let</span> curViewCameraPosition = <span class="hljs-keyword">new</span> Cesium.Cartesian3();
+Cesium.Cartesian3.clone(curView.position, curViewCameraPosition);
+<span class="hljs-keyword">let</span> curViewPoint = <span class="hljs-keyword">this</span>.viewPoint.clone();
+Cesium.Cartesian3.normalize(curViewPoint, curViewPoint);
+
+<span class="hljs-comment">// 视锥体局部坐标系下的right轴</span>
+<span class="hljs-comment">// 下面步骤中叉乘的参数顺序一定要注意</span>
+<span class="hljs-keyword">this</span>.right = <span class="hljs-keyword">new</span> Cesium.Cartesian3();
+Cesium.Cartesian3.cross(curViewPoint, <span class="hljs-keyword">this</span>.viewDirection, <span class="hljs-keyword">this</span>.right);
+Cesium.Cartesian3.normalize(<span class="hljs-keyword">this</span>.right, <span class="hljs-keyword">this</span>.right);
+<span class="hljs-comment">// 视锥体局部坐标系下的up轴</span>
+<span class="hljs-keyword">this</span>.up = <span class="hljs-keyword">new</span> Cesium.Cartesian3();
+Cesium.Cartesian3.cross(<span class="hljs-keyword">this</span>.viewDirection, <span class="hljs-keyword">this</span>.right, <span class="hljs-keyword">this</span>.up);
+Cesium.Cartesian3.normalize(<span class="hljs-keyword">this</span>.up, <span class="hljs-keyword">this</span>.up);
+<span class="hljs-comment">// 借用Cesium中自带的Camera方法获取模拟观察视锥体的heading、pitch、roll</span>
+<span class="hljs-comment">// 省去了一大波麻烦事，以后有时间再研究一波</span>
+curView.setView(&#123;
+  destination: <span class="hljs-keyword">this</span>.viewPoint,
+  orientation: &#123;
+    direction: <span class="hljs-keyword">this</span>.viewDirection,
+    up: <span class="hljs-keyword">this</span>.up
+  &#125;
+&#125;)
+<span class="hljs-keyword">this</span>.heading = curView.heading;
+<span class="hljs-keyword">this</span>.pitch = curView.pitch;
+<span class="hljs-keyword">this</span>.roll = curView.roll;
+<span class="hljs-comment">// 再回退到正常的Camera（用完人家的方法得给人家恢复到之前的状态）</span>
+curView.setView(&#123;
+  destination: curViewCameraPosition,
+  orientation: &#123;
+    heading: curViewHeading,
+    pitch: curViewPitch,
+    roll: curViewRoll
+  &#125;
+&#125;);
+
+<span class="hljs-keyword">this</span>.spotLight.frustum.far = <span class="hljs-keyword">this</span>.frustumFar;
+<span class="hljs-keyword">this</span>.shadowOptions.maximumDistance = <span class="hljs-keyword">this</span>.frustumFar;
+<span class="hljs-keyword">this</span>.spotLight.setView(&#123;
+  destination: <span class="hljs-keyword">this</span>.viewPoint,
+  orientation: &#123;
+    heading: <span class="hljs-keyword">this</span>.heading,
+    pitch: <span class="hljs-keyword">this</span>.pitch,
+    roll: <span class="hljs-keyword">this</span>.roll
+  &#125;
+&#125;)</code></pre>
+<h3 id="4-根据姿态计算变换矩阵"><a href="#4-根据姿态计算变换矩阵" class="headerlink" title="4.根据姿态计算变换矩阵"></a>4.根据姿态计算变换矩阵</h3><p>下面是createFrustum函数</p>
+<p>简单的说，就是由heading、pitch、roll代表ENU局部坐标系下的姿态，然后将其转为四元数，再由四元数转为矩阵就得到了heading、pitch、roll对应的局部坐标系下的变换矩阵，再左乘模型变换矩阵（Cesium.Transforms.eastNorthUpToFixedFrame(this.viewPoint)）将模型从局部坐标系变换到世界坐标系，最终就得到了heading、pitch、roll对应的世界坐标系。</p>
+<p>然后局部坐标系下创建一个视锥体，主要就是计算视锥体各个顶点的位置、顶点索引（webGL那一块），然后构造视锥体线框并添加，这样就可以看到视锥体了。话不多说，都在代码里。这里主要说明思路，所以为了性能很多都直接变量直接写死成了常数，比如视锥体fov是π/2等，生产环境下还是得根据输入参数来。</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">/** 1.先计算变换矩阵 */</span>
+<span class="hljs-comment">// 注意，heading、pitch、roll的轴方向正好和局部坐标系east、north、up相反</span>
+<span class="hljs-comment">// heading轴是down，pitch轴左向（west），roll轴是后向（south），所以对pitch、roll取反</span>
+<span class="hljs-comment">// heading + 1.5707963是因为默认情况下heading指向正西，需要加Π / 2 = 45°换算成弧度是1.5707963旋转到正北</span>
+<span class="hljs-keyword">let</span> hpr = <span class="hljs-keyword">new</span> Cesium.HeadingPitchRoll(<span class="hljs-keyword">this</span>.heading + <span class="hljs-number">1.5707963</span>, -<span class="hljs-keyword">this</span>.pitch, -<span class="hljs-keyword">this</span>.roll);
+<span class="hljs-comment">// 四元数</span>
+<span class="hljs-keyword">let</span> Qua = Cesium.Quaternion.fromHeadingPitchRoll(hpr);
+<span class="hljs-comment">// 再通过四元数计算出旋转矩阵，注意，以上无论是hpr还是Qua都是局部坐标系</span>
+<span class="hljs-comment">// 通俗的说就是地球上你所在的局部坐标系上北下南（x轴）左西右东（y轴）头顶为上（z轴）这种</span>
+<span class="hljs-keyword">let</span> rotMatrix = Cesium.Matrix3.fromQuaternion(Qua);
+<span class="hljs-comment">// 下面这部是将你的局部坐标系准换到地球球心三维坐标系（比如x轴为0度经纬度交点和球心连线，z轴为球心和几点连线）</span>
+<span class="hljs-keyword">let</span> modelMatrix = Cesium.Matrix4.multiply(
+  <span class="hljs-comment">// 这一步对应于渲染管线中的局部坐标系变换到世界坐标系</span>
+  Cesium.Transforms.eastNorthUpToFixedFrame(<span class="hljs-keyword">this</span>.viewPoint),
+  <span class="hljs-comment">// 对应于局部坐标系下的位置变换矩阵</span>
+  Cesium.Matrix4.fromRotationTranslation(rotMatrix, <span class="hljs-keyword">new</span> Cesium.Cartesian3(<span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>)),
+  <span class="hljs-keyword">this</span>.stretchMatrix
+);
+
+<span class="hljs-comment">/** 2.局部坐标系下计算构建视锥体需要的顶点数据 */</span>
+<span class="hljs-comment">// 描述一个金字塔需要5个点，同理，描述一个视锥体也是</span>
+<span class="hljs-keyword">let</span> viewshedPoints = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Float64Array</span>(<span class="hljs-number">5</span> * <span class="hljs-number">3</span>);
+<span class="hljs-comment">// 绘制视锥体的线框</span>
+<span class="hljs-keyword">let</span> viewshedIndices = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint32Array</span>(<span class="hljs-number">16</span>);
+<span class="hljs-keyword">let</span> index = <span class="hljs-number">0</span>;
+<span class="hljs-keyword">let</span> tempPosition = <span class="hljs-keyword">this</span>.frustumFar * <span class="hljs-number">0.57735</span>;
+<span class="hljs-comment">// 模拟观察点默认为局部坐标系原点（金字塔的顶点）</span>
+viewshedPoints[index++] = <span class="hljs-number">0</span>;
+viewshedPoints[index++] = <span class="hljs-number">0</span>;
+viewshedPoints[index++] = <span class="hljs-number">0</span>;
+
+<span class="hljs-comment">// 模拟观察视锥体远裁剪面左下角坐标</span>
+viewshedPoints[index++] = -<span class="hljs-keyword">this</span>.frustumFar;
+viewshedPoints[index++] = -tempPosition;    <span class="hljs-comment">// y轴，0.57735为tan30</span>
+viewshedPoints[index++] = -tempPosition;    <span class="hljs-comment">// z轴，0.57735为tan30</span>
+
+<span class="hljs-comment">// 模拟观察视锥体远裁剪面右下角坐标</span>
+viewshedPoints[index++] = -<span class="hljs-keyword">this</span>.frustumFar;
+viewshedPoints[index++] = tempPosition;
+viewshedPoints[index++] = -tempPosition;
+
+<span class="hljs-comment">// 模拟观察视锥体远裁剪面右上角坐标</span>
+viewshedPoints[index++] = -<span class="hljs-keyword">this</span>.frustumFar;
+viewshedPoints[index++] = tempPosition;
+viewshedPoints[index++] = tempPosition;
+
+<span class="hljs-comment">// 模拟观察视锥体远裁剪面左上角坐标</span>
+viewshedPoints[index++] = -<span class="hljs-keyword">this</span>.frustumFar;
+viewshedPoints[index++] = -tempPosition;
+viewshedPoints[index++] = tempPosition;
+
+index = <span class="hljs-number">0</span>;
+<span class="hljs-comment">// 构造绘制线框时时用到的索引</span>
+viewshedIndices[index++] = <span class="hljs-number">0</span>;               <span class="hljs-comment">// 模拟观察点</span>
+viewshedIndices[index++] = <span class="hljs-number">1</span>;               <span class="hljs-comment">// 左下角点</span>
+viewshedIndices[index++] = <span class="hljs-number">0</span>;
+viewshedIndices[index++] = <span class="hljs-number">2</span>;               <span class="hljs-comment">// 右下角点</span>
+viewshedIndices[index++] = <span class="hljs-number">0</span>;
+viewshedIndices[index++] = <span class="hljs-number">3</span>;               <span class="hljs-comment">// 右上角点</span>
+viewshedIndices[index++] = <span class="hljs-number">0</span>;
+viewshedIndices[index++] = <span class="hljs-number">4</span>;               <span class="hljs-comment">// 左上角点</span>
+viewshedIndices[index++] = <span class="hljs-number">1</span>;
+viewshedIndices[index++] = <span class="hljs-number">2</span>;
+viewshedIndices[index++] = <span class="hljs-number">2</span>;
+viewshedIndices[index++] = <span class="hljs-number">3</span>;
+viewshedIndices[index++] = <span class="hljs-number">3</span>;
+viewshedIndices[index++] = <span class="hljs-number">4</span>;
+viewshedIndices[index++] = <span class="hljs-number">4</span>;
+viewshedIndices[index++] = <span class="hljs-number">1</span>;
+
+<span class="hljs-comment">/** 3.根据计算的数据，创建视锥体 */</span>
+<span class="hljs-comment">// 相当于webGL中包含顶点和颜色的缓冲区</span>
+<span class="hljs-keyword">let</span> frustumAttributes = <span class="hljs-keyword">new</span> Cesium.GeometryAttributes(&#123;
+  position: <span class="hljs-keyword">new</span> Cesium.GeometryAttribute(&#123;
+    componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+    componentsPerAttribute: <span class="hljs-number">3</span>,
+    values: viewshedPoints
+  &#125;)
+&#125;)
+
+<span class="hljs-comment">// 局部坐标系下的模拟观察视锥体的中心点</span>
+<span class="hljs-keyword">let</span> viewshedCenter = <span class="hljs-keyword">new</span> Cesium.Cartesian3(<span class="hljs-keyword">this</span>.frustumFar * <span class="hljs-number">-0.5</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+<span class="hljs-keyword">let</span> frustumGeometry = <span class="hljs-keyword">new</span> Cesium.Geometry(&#123;
+  attributes: frustumAttributes,
+  indices: viewshedIndices,
+  primitiveType: Cesium.PrimitiveType.LINES,
+  boundingSphere: <span class="hljs-keyword">new</span> Cesium.BoundingSphere(viewshedCenter, <span class="hljs-keyword">this</span>.frustumFar * <span class="hljs-number">1.1547</span>) <span class="hljs-comment">// cos30° = 1 / 1.1547 = 0.8660254</span>
+&#125;)
+
+<span class="hljs-keyword">let</span> frustumOutlineInstance = <span class="hljs-keyword">new</span> Cesium.GeometryInstance(&#123;
+  geometry: frustumGeometry,
+  modelMatrix: modelMatrix,
+  attributes: &#123;
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CRIMSON)
+  &#125;
+&#125;)
+
+<span class="hljs-keyword">let</span> frustumOutlineGeometry = <span class="hljs-keyword">new</span> Cesium.Primitive(&#123;
+  geometryInstances: frustumOutlineInstance,
+  asynchronous: <span class="hljs-literal">false</span>,
+  appearance: <span class="hljs-keyword">new</span> Cesium.PerInstanceColorAppearance(&#123;
+    flat: <span class="hljs-literal">true</span>,
+    translucent: <span class="hljs-literal">false</span>
+  &#125;)
+&#125;);
+
+<span class="hljs-comment">// 更新视锥体</span>
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.frustumOutlineGeometry) <span class="hljs-keyword">this</span>.viewer.scene.primitives.remove(<span class="hljs-keyword">this</span>.frustumOutlineGeometry);
+<span class="hljs-keyword">this</span>.frustumOutlineGeometry = frustumOutlineGeometry;
+<span class="hljs-keyword">this</span>.viewer.scene.primitives.add(<span class="hljs-keyword">this</span>.frustumOutlineGeometry);</code></pre>
+<p>主要过程都阐述完毕，下面说个函数入口和出口。viewshed是个类名。</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">// 构造函数属性</span>
+<span class="hljs-keyword">constructor</span>(viewer) &#123;
+  <span class="hljs-keyword">this</span>.viewer = viewer;
+  <span class="hljs-keyword">this</span>.mouseHandler = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// 是否开启了同时分析</span>
+  <span class="hljs-keyword">this</span>.isDrawViewshed = <span class="hljs-literal">false</span>;
+  <span class="hljs-comment">// 模拟观察点</span>
+  <span class="hljs-keyword">this</span>.viewPoint = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// 远裁剪面中心点(该点 - 观察点 = 观察向量)</span>
+  <span class="hljs-keyword">this</span>.viewEndPoint = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// 视锥体</span>
+  <span class="hljs-keyword">this</span>.spotLight = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// 构建Cesium中的shadowMap时需要的参数</span>
+  <span class="hljs-keyword">this</span>.shadowOptions = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// 是否开启了深度测试</span>
+  <span class="hljs-keyword">this</span>.depthTest = <span class="hljs-literal">false</span>;
+  <span class="hljs-comment">// 描述视锥体的四个面片</span>
+  <span class="hljs-keyword">this</span>.frustumEntities = [];
+  <span class="hljs-comment">// 模拟观察点到模拟视锥体远裁剪面的距离</span>
+  <span class="hljs-keyword">this</span>.frustumFar = <span class="hljs-literal">null</span>;
+
+  <span class="hljs-comment">// 局部坐标系下的heading、pitch、roll</span>
+  <span class="hljs-keyword">this</span>.heading = <span class="hljs-literal">null</span>;
+  <span class="hljs-keyword">this</span>.pitch = <span class="hljs-literal">null</span>;
+  <span class="hljs-keyword">this</span>.roll = <span class="hljs-literal">null</span>;
+
+  <span class="hljs-comment">// 局部坐标系的轴</span>
+  <span class="hljs-keyword">this</span>.viewDirection = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// up表示上方向</span>
+  <span class="hljs-keyword">this</span>.up = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// right表示和up、viewDirection都垂直的轴，三个轴构成空间直角坐标系</span>
+  <span class="hljs-comment">// 但一般只用到up和direction，一般先求direction，然后计算出right，最后由direction和right计算出up</span>
+  <span class="hljs-keyword">this</span>.right = <span class="hljs-literal">null</span>;
+
+  <span class="hljs-comment">// 模拟视锥体的线框</span>
+  <span class="hljs-keyword">this</span>.frustumOutlineGeometry = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// 视线方向</span>
+  <span class="hljs-keyword">this</span>.viewDirectionGeometry = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// up轴</span>
+  <span class="hljs-keyword">this</span>.viewUpGeometry = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// right轴</span>
+  <span class="hljs-keyword">this</span>.viewRightGeometry = <span class="hljs-literal">null</span>;
+  <span class="hljs-comment">// 没用的变量</span>
+  <span class="hljs-keyword">this</span>.stretchMatrix = <span class="hljs-keyword">new</span> Cesium.Matrix4();
+&#125;
+
+<span class="hljs-comment">// 函数入口</span>
+startViewshed() &#123;
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.isDrawViewshed) <span class="hljs-keyword">return</span>;
+  <span class="hljs-keyword">this</span>.init();
+&#125;
+
+<span class="hljs-comment">// 函数出口</span>
+endViewshed() &#123;
+  <span class="hljs-keyword">this</span>.isDrawViewshed = <span class="hljs-literal">false</span>;
+  <span class="hljs-comment">// 解除鼠标绑定事件</span>
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.mouseHandler) &#123;
+    <span class="hljs-keyword">this</span>.mouseHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    <span class="hljs-comment">// 这里问了保险起见，再次解除鼠标移动事件绑定</span>
+    <span class="hljs-keyword">this</span>.mouseHandler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  &#125;
+  <span class="hljs-comment">// 清空所有绘制</span>
+  <span class="hljs-keyword">this</span>.viewer.entities.remove(<span class="hljs-keyword">this</span>.viewPointGeometry);
+  <span class="hljs-keyword">this</span>.viewer.scene.primitives.remove(<span class="hljs-keyword">this</span>.frustumOutlineGeometry);
+  <span class="hljs-keyword">this</span>.viewer.scene.primitives.remove(<span class="hljs-keyword">this</span>.viewDirectionGeometry);
+  <span class="hljs-keyword">this</span>.viewer.scene.primitives.remove(<span class="hljs-keyword">this</span>.viewUpGeometry);
+  <span class="hljs-keyword">this</span>.viewer.scene.primitives.remove(<span class="hljs-keyword">this</span>.viewRightGeometry);
+
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.viewer.scene.shadowMap) &#123;
+    <span class="hljs-keyword">this</span>.viewer.scene.shadowMap.enabled = <span class="hljs-literal">false</span>;
+  &#125;
+
+  <span class="hljs-comment">// 释放所有资源</span>
+  <span class="hljs-keyword">this</span>.destory();
+&#125;</code></pre>
+<p>OVER！Cesium自身封装webGL的流程有时间还是得好好嚼嚼，上文中说的很粗略，比如ShaderSource和ShadowMapShader里的东西就很多，后面有时间也详细说一下（又一个flag立下了）</p>
 
             </article>
             <hr>
